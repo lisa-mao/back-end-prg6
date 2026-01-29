@@ -10,9 +10,11 @@
     "dev": "node --env-file=.env --watch index.js"
   },
   "dependencies": {
-    "@faker-js/faker": "^10.2.0",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.1.4"
+    "mongoose": "^9.1.5"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.2.0"
   }
 }
