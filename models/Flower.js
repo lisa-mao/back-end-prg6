@@ -5,6 +5,7 @@ const flowerSchema = new mongoose.Schema({
     //properties of the model and what type
     flowerName: {type: String, required: true},
     description: { type: String, required: true },
+    author: {type: String, required: true}
 
 })
 
