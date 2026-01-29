@@ -10,7 +10,8 @@ routes.get("/flowers", async (req, res) => {
         //wait for database communication before continuing
         const flowers = await Flower.find({})
 
-        res.json(flowers)
+        //status code: everything went well and the server send a response back
+        res.status(200).json({message: "Got all flowers",flowers})
 
     } catch (error) {
         res.status(500).json(error.message)
@@ -43,7 +44,7 @@ routes.post("/flowers/seed", async (req, res) => {
         const createdFlowers = await Flower.insertMany(flowersToInsert)
 
 
-        res.status(201).json(createdFlowers)
+        res.status(201).json({message: "Created flower!", createdFlowers})
     } catch (error
         ) {
         res.status(500).json({message: "Error creating flower", error: error.message})
@@ -63,8 +64,8 @@ routes.get("/flowers/:id", async (req, res) => {
             })
         }
 
-        res.json({
-            message: `Details van de bloem ${specificFlower.flowerName}`,
+        res.status(200).json({
+            message: `Details van de bloem ${specificFlower.flowerName} went through!`,
             data: specificFlower
         })
 
@@ -102,7 +103,7 @@ routes.put("/flowers/seed/:id", async (req, res) => {
         }
 
         res.status(200).json({
-            message: `Updated ${updatedFlower.flowerName} successfully`,
+            message: `Updated ${updatedFlower.flowerName} successfully!`,
             data: updatedFlower
         })
 
@@ -140,7 +141,7 @@ routes.delete("/flowers/delete/:id", async (req, res) => {
         }
 
         res.status(202).json({
-            message: `flower deleted ${deleteFlower.flowerName}`,
+            message: `${deleteFlower.flowerName} deleted!`,
             data: deleteFlower
         })
 
