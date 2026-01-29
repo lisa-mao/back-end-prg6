@@ -10,7 +10,7 @@ function createRandomFlower() {
         //need key/value pair for helpers to work
         //chooses a random flower
         flowerName: faker.helpers.arrayElement(['Rose', 'Cornflower', 'Buttercup', 'Lily', 'Tulip', 'Daisy', 'Grass', 'small flower', 'flowername2', "flowername3"]),
-        description: faker.lorem.sentence(5 | {5: 10})
+        description: faker.lorem.sentence(5.10)
     }
 }
 
@@ -24,8 +24,8 @@ async function seedDB() {
 
         //add to database
         const fakeFlowers = faker.helpers.multiple(createRandomFlower, {count: 10})
-        await Flower.insertMany(fakeFlowers)
-        console.log("Success added 10 flowers")
+        const result = await Flower.insertMany(fakeFlowers)
+        console.log(`Success added 10 flowers`, result)
 
         await mongoose.disconnect()
         console.log("db connection stopped")
