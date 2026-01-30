@@ -1,6 +1,7 @@
 import express, {response} from "express";
 import Flower from "./models/Flower.js";
 import seedDB from "./seeder/seeder.js"
+import {base} from "@faker-js/faker";
 
 
 const routes = express.Router()
@@ -32,7 +33,12 @@ routes.get("/flowers", async (req, res) => {
                 }
             }));
 
-            return res.json(mappedItems);
+            return res.json({
+                "items": mappedItems,
+                "_links":{
+                    "self": {"href": baseUrl}
+                }
+            });
         }
 
         // With pagination
