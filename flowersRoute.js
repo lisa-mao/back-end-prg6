@@ -107,28 +107,40 @@ routes.get("/flowers/:id", async (req, res) => {
         const flowerId = req.params.id
         const specificFlower = await Flower.findById(flowerId)
 
+        //check if flower exists
         if (!specificFlower) {
             return res.status(404).json({
-                message: "bloem niet gevonden"
+                message: "flower not found"
             })
         }
 
+        const protocol = req.protocol
+        const baseUrl = `${protocol}://${req.headers.host}/flowers`;
+
+        //if there are no query parameters- send back BALD url as self
+        const selfLink = `${baseUrl}/${specificFlower._id}`
+
+
+
         res.status(200).json({
-            "id": specificFlower.flowerId,
+            "id": specificFlower._id,
             "flowerName": specificFlower.flowerName,
             "description": specificFlower.description,
             "author": specificFlower.author,
             "_links": {
                 "self": {
-                    "href": `https://${req.headers.host}/flowers/${specificFlower.flowerId}`
+                    "href": selfLink
                 },
                 "collection": {
-                    "href": `https://${req.headers.host}/flowers`
+                    "href": baseUrl
                 }
             }
         })
 
     } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(500).json({message: error.message})
+        }
         res.status(500).json({message: error.message})
     }
 })
