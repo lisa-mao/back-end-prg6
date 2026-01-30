@@ -8,7 +8,7 @@ const PORT = 8080
 
 //parsers to make data readable
 app.use(express.json())
-app.use(urlencoded({extended:true}))
+app.use(express.urlencoded({extended:true}))
 
 //CORS
 app.use(function (req,res,next){
@@ -68,8 +68,8 @@ app.use((req, res, next)=> {
     console.log("Requested /")
     console.log(`Request METHOD: ${req.method}`)
 
-    if (!req.accepts('json')) {
-        return res.status(406).json('Not acceptable: only json-content allowed!')
+    if (!req.accepts('json'|| 'x-www-form-urlencoded')) {
+        return res.status(406).json('Not acceptable: only json-content/x-www-form-urlencoded allowed!')
     }
     if (req.headers?.accept) {
         console.log(`The accept header is: ${req.headers.accept}`)
@@ -84,7 +84,7 @@ app.use((req, res, next)=> {
 
 connectDB().then(r =>
     app.listen(PORT, () => {
-        console.log("Server luistert op poort 8080");
+        console.log(`Server luistert op poort: ${PORT}`);
     })
 );
 
