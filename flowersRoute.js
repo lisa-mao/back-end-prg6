@@ -10,69 +10,32 @@ const routes = express.Router()
 routes.get("/flowers", async (req, res) => {
     try {
         const totalItems = await Flower.countDocuments();
-        const limit = req.query.limit ? parseInt(req.query.limit) : null;
+        const limit = parseInt(req.query.limit) || totalItems || 0
         const page = parseInt(req.query.page) || 1;
-
-        const baseUrl = `http://${req.headers.host}/flowers`;
+        const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 1;
+        const skip = (page-1) * limit
+        const baseUrl = `https://${req.headers.host}/flowers`;
 
         // If no limit is specified, return all items without pagination
-        if (!limit || isNaN(limit)) {
-            const flowers = await Flower.find();
 
-            const mappedItems = flowers.map(flower => ({
-                "id": flower._id,
-                "flowerName": flower.flowerName || "",
-                "description": flower.description || "",
-                "_links": {
-                    "self": {
-                        "href": `${baseUrl}/${flower._id}`
-                    },
-                    "collection": {
-                        "href": baseUrl
-                    }
-                }
-            }));
-
-            return res.json({
-                "items": mappedItems,
-                "_links": {
-                    "self": {
-                        "href": baseUrl
-                    }
-                }
-            });
-        }
-
-        // With pagination
-        const totalPages = Math.ceil(totalItems / limit);
-        const skip = (page - 1) * limit;
-        const flowers = await Flower.find().skip(skip).limit(limit);
-
-        const getPaginationLink = (p) => `${baseUrl}?page=${p}&limit=${limit}`;
+        const flowers = await Flower.find();
 
         const mappedItems = flowers.map(flower => ({
             "id": flower._id,
             "flowerName": flower.flowerName || "",
             "description": flower.description || "",
             "_links": {
-                "self": {
-                    "href": `${baseUrl}/${flower._id}`
-                },
-                "collection": {
-                    "href": baseUrl
-                }
+                "self": { "href": `${baseUrl}/${flower._id}` },
+                "collection": { "href": baseUrl }
             }
         }));
 
-        const previousPage = page > 1 ? page - 1 : null;
-        const nextPage = page < totalPages ? page + 1 : null;
+        const getPaginationLink = (p) => `${baseUrl}?page=${p}&limit=${limit}`;
 
-        const responseData = {
+        res.json({
             "items": mappedItems,
             "_links": {
-                "self": {
-                    "href": getPaginationLink(page)
-                }
+                "self": { "href": getPaginationLink(page) }
             },
             "pagination": {
                 "currentPage": page,
@@ -80,33 +43,16 @@ routes.get("/flowers", async (req, res) => {
                 "totalPages": totalPages,
                 "totalItems": totalItems,
                 "_links": {
-                    "first": {
-                        "page": 1,
-                        "href": getPaginationLink(1)
-                    },
-                    "last": {
-                        "page": totalPages,
-                        "href": getPaginationLink(totalPages)
-                    },
-                    "previous": previousPage !== null ? {
-                        "page": previousPage,
-                        "href": getPaginationLink(previousPage)
-                    } : null,
-                    "next": nextPage !== null ? {
-                        "page": nextPage,
-                        "href": getPaginationLink(nextPage)
-                    } : null
+                    "first": { "page": 1, "href": getPaginationLink(1) },
+                    "last": { "page": totalPages, "href": getPaginationLink(totalPages) },
+                    "previous": page > 1 ? { "page": page - 1, "href": getPaginationLink(page - 1) } : null,
+                    "next": page < totalPages ? { "page": page + 1, "href": getPaginationLink(page + 1) } : null
                 }
             }
-        };
-
-        res.json(responseData);
+        });
 
     } catch (err) {
-        res.status(500).json({
-            "error": "Server fout bij het ophalen van de collectie",
-            "message": err.message
-        });
+        res.status(500).json({ "error": "Server fout", "message": err.message });
     }
 })
 
