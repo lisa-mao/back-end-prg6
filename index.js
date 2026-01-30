@@ -69,9 +69,9 @@ app.use((req, res, next)=> {
     console.log(`Request METHOD: ${req.method}`)
 
     if (req.headers.accept && !req.accepts('json') && !req.accepts('*/*')) {
-        return res.status(406).json('Not acceptable: only json-content allowed!')
-    } else {
-        console.log("There is no accept header")
+        return res.status(406).json({
+            error: "JSON ONLY."
+        });
     }
 
 
