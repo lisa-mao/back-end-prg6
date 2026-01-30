@@ -21,7 +21,7 @@ routes.get("/flowers", async (req, res) => {
         const protocol = req.protocol
         const host = req.headers.host
 
-        const response = {
+        const responseData = {
             "items": flowers.map(flower => ({
                 ...flower.toObject(),
                 "_links": {
@@ -65,7 +65,7 @@ routes.get("/flowers", async (req, res) => {
         res.setHeader("Content-Type", 'application/json')
 
         //status code: everything went well and the server send a response back
-        res.status(200).json(response)
+        res.status(200).json(responseData)
 
     } catch
         (error) {

@@ -1,25 +1,23 @@
 import mongoose from 'mongoose'
 import express, {urlencoded} from 'express'
-import Flower from "./models/Flower.js";
-const app = express()
 import flowersRoute from "./flowersRoute.js";
 import connectDB from "./config/db.js";
-const PORT = 8080
 
+const app = express()
+const PORT = 8080
 
 //parsers to make data readable
 app.use(express.json())
 app.use(urlencoded({extended:true}))
 
 //CORS
-const allowedOrigins = [
-    'http://localhost:8080',
-    'http://145.24.237.144:8080'
-]
-
 app.use(function (req,res,next){
-    const origin = req.headers.origin
+    const allowedOrigins = [
+        'http://localhost:8080',
+        'http://145.24.237.144:8080'
+    ]
 
+    const origin = req.headers.origin
     if (allowedOrigins.includes(origin)) {
         res.header("Access-Control-Allow-Origin", origin)
         res.header("Vary", "Origin")
@@ -35,13 +33,14 @@ app.use(function (req,res,next){
     const isCollection = pathParts.length <= 1
     const isItem = pathParts.length > 1
 
-    let allowedMethods = ""
+    let allowedMethods = "OPTIONS"
 
     if (isCollection){
         allowedMethods = "GET, POST, OPTIONS"
     } else if (isItem) {
         allowedMethods = "GET, PUT, DELETE, OPTIONS"
     }
+
     res.header("Allow", allowedMethods)
 
     if (req.method === "OPTIONS") {
@@ -49,8 +48,8 @@ app.use(function (req,res,next){
         return res.sendStatus(204)
     }
 
-    if (allowedMethods && !allowedMethods.includes(req.method)) {
-        return res.status(204).json({
+    if (!allowedMethods.includes(req.method)) {
+        return res.status(405).json({
             error: `method: ${req.method} is not allowed on this path`,
             allowed: allowedMethods
         })
