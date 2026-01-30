@@ -16,8 +16,8 @@ app.use(express.urlencoded({extended: true}))
 app.use(function (req, res, next) {
     const allowedOrigins = ['http://localhost:8080', 'http://145.24.237.144:8080', 'http://145.24.237.144:3000'];
     const origin = req.headers.origin;
-    res.header("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : "*");
 
+    res.header("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : "*");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
@@ -32,11 +32,18 @@ app.use(function (req, res, next) {
         allowed = "GET, PUT, DELETE, OPTIONS"
     }
 
+    res.header("Allow", allowed)
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(204)
     }
 
-    res.header("Allow", allowed)
+    if (!allowed.includes(req.method)) {
+        return res.status(405).json({
+            error: `Method ${req.method} is not allowed on ${req.path}`,
+            allowed: allowed
+        })
+    }
     next();
 })
 

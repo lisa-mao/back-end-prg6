@@ -2,6 +2,7 @@ import express, {response} from "express";
 import Flower from "./models/Flower.js";
 import seedDB from "./seeder/seeder.js"
 import {base} from "@faker-js/faker";
+import flower from "./models/Flower.js";
 
 
 const routes = express.Router()
@@ -62,8 +63,7 @@ routes.get("/flowers", async (req, res) => {
     }
 })
 
-//seed database
-routes.post("/flowers/seed", async (req, res) => {
+routes.post("/flowers", async (req, res) => {
     try {
         const {flowerName, description, author, amount} = req.body
 
@@ -71,18 +71,36 @@ routes.post("/flowers/seed", async (req, res) => {
             return res.status(400).json({ error: "field no found" });
         }
 
-        const flower = new Flower({ flowerName, description, author });
-        await flower.save();
-
         const baseUrl = `${req.protocol}://${req.headers.host}/flowers`;
 
+        if (amount && parseInt(amount) > 1) {
+            const count = parseInt(amount, 10)
+            const flowersToInsert = await seedDB(count, {
+                flowerName, description, author
+            })
+            const createdFlowers = await Flower.insertMany(flowersToInsert)
+
+            return res.status(201).json({
+                message: `Succesfully seeded ${count} flowers!`,
+                count: createdFlowers.length
+            })
+        }
+
+        const flower = new Flower({
+            flowerName, description, author
+        })
+        await flower.save()
+
         res.status(201).json({
-            ...flower.toJSON(),
-            _links: {
-                self: { href: `${baseUrl}/${flower._id}` },
-                collection: { href: baseUrl }
+            "id": flower._id,
+            "flowerName": flower.flowerName,
+            "description": flower.description,
+            "author": flower.author,
+            "_links": {
+                "self": { "href": `${baseUrl}/${flower._id}` },
+                "collection": { "href": baseUrl }
             }
-        });
+        })
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -137,23 +155,11 @@ routes.put("/flowers/:id", async (req, res) => {
         const {flowerName, description, author} = req.body
         const flowerId = req.params.id
 
+        const protocol = req.protocol
+        const baseUrl = `${protocol}://${req.headers.host}/flowers`;
 
-        if (!flowerName) {
-            return res.status(400).json({
-                message: "flowerName is required and cannot be empty"
-            })
-        }
-
-        if (!description) {
-            return res.status(400).json({
-                message: "description is required and cannot be empty"
-            })
-        }
-
-        if (!author) {
-            return res.status(400).json({
-                message: "author is required and cannot be empty"
-            })
+        if (!flowerName || !description || !author) {
+            return res.status(400).json({ error: "All fields (flowerName, description, author) are required for PUT." });
         }
 
         const updatedFlower = await Flower.findByIdAndUpdate(
@@ -169,6 +175,11 @@ routes.put("/flowers/:id", async (req, res) => {
         }
 
         res.status(200).json({
+            ...updatedFlower.toJSON(),
+            "_links": {
+                "self": { "href": `${baseUrl}/${updatedFlower._id}` },
+                "collection": { "href": baseUrl }
+            },
             message: `Updated ${updatedFlower.flowerName} successfully!`,
             data: updatedFlower
         })
