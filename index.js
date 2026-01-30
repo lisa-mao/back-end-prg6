@@ -30,6 +30,8 @@ app.use(function (req,res,next){
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 
     const pathParts = req.path.split("/").filter(part => part !== "")
+
+    //decides if were on /flowers(collection) or /flowers/123(isItem)
     const isCollection = pathParts.length <= 1
     const isItem = pathParts.length > 1
 
@@ -48,18 +50,11 @@ app.use(function (req,res,next){
     }
 
     if (allowedMethods && !allowedMethods.includes(req.method)) {
-        return res.status(204).json({
+        return res.status(405).json({
             error: `method: ${req.method} is not allowed on this path`,
             allowed: allowedMethods
         })
     }
-
-
-
-
-
-
-
     next()
 })
 
