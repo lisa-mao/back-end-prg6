@@ -14,11 +14,13 @@ routes.get("/flowers", async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 1;
         const skip = (page-1) * limit
-        const baseUrl = `https://${req.headers.host}/flowers`;
+
+        const protocol = req.protocol
+        const baseUrl = `${protocol}://${req.headers.host}/flowers`;
 
         // If no limit is specified, return all items without pagination
 
-        const flowers = await Flower.find();
+        const flowers = await Flower.find().skip(skip).limit(limit);
 
         const mappedItems = flowers.map(flower => ({
             "id": flower._id,
@@ -61,7 +63,7 @@ routes.post("/flowers/seed", async (req, res) => {
     try {
         const {flowerName, description, author, amount} = req.body
 
-        // Validatie - zonder trim
+
         if (!flowerName) {
             return res.status(400).json({
                 message: "flowerName is required and cannot be empty"
@@ -108,16 +110,16 @@ routes.get("/flowers/:id", async (req, res) => {
         }
 
         res.status(200).json({
-            "id": specificFlower._id,
+            "id": specificFlower.flowerId,
             "flowerName": specificFlower.flowerName,
             "description": specificFlower.description,
             "author": specificFlower.author,
             "_links": {
                 "self": {
-                    "href": `http://${req.headers.host}/flowers/${specificFlower._id}`
+                    "href": `https://${req.headers.host}/flowers/${specificFlower.flowerId}`
                 },
                 "collection": {
-                    "href": `http://${req.headers.host}/flowers`
+                    "href": `https://${req.headers.host}/flowers`
                 }
             }
         })
@@ -132,7 +134,7 @@ routes.put("/flowers/:id", async (req, res) => {
         const {flowerName, description, author} = req.body
         const flowerId = req.params.id
 
-        // Validatie - zonder trim
+
         if (!flowerName) {
             return res.status(400).json({
                 message: "flowerName is required and cannot be empty"
