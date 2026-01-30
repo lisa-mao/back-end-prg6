@@ -8,20 +8,39 @@ const routes = express.Router()
 //callback function need async to use await and get all flowers
 routes.get("/flowers", async (req, res) => {
     try {
-
         const totalItems = await Flower.countDocuments();
-        const limit = parseInt(req.query.limit) || totalItems;
+        const limit = parseInt(req.query.limit);
         const page = parseInt(req.query.page) || 1;
 
+        const baseUrl = `https://${req.headers.host}/flowers`;
 
-        const totalPages = Math.ceil(totalItems / limit) || 1;
+        // If no limit is specified return all items without pagination
+        if (!limit || isNaN(limit)) {
+            const flowers = await Flower.find();
+
+            const mappedItems = flowers.map(flower => ({
+                id: flower._id,
+                name: flower.name,
+                color: flower.color,
+                origin: flower.origin,
+                _links: {
+                    self: {
+                        href: `${baseUrl}/${flower._id}`
+                    },
+                    collection: {
+                        href: baseUrl
+                    }
+                }
+            }));
+
+            return res.json(mappedItems);
+        }
+
+        // With pagination
+        const totalPages = Math.ceil(totalItems / limit);
         const skip = (page - 1) * limit;
-
-
         const flowers = await Flower.find().skip(skip).limit(limit);
 
-
-        const baseUrl = `http://${req.headers.host}/flowers`;
         const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
 
         const mappedItems = flowers.map(flower => ({
@@ -29,7 +48,6 @@ routes.get("/flowers", async (req, res) => {
             name: flower.name,
             color: flower.color,
             origin: flower.origin,
-
             _links: {
                 self: {
                     href: `${baseUrl}/${flower._id}`
@@ -40,11 +58,10 @@ routes.get("/flowers", async (req, res) => {
             }
         }));
 
-
         const responseData = {
             items: mappedItems,
             _links: {
-                self: { href: baseUrl }
+                self: { href: `${baseUrl}?limit=${limit}&page=${page}` }
             },
             pagination: {
                 currentPage: page,
