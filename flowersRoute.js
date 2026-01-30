@@ -32,12 +32,16 @@ routes.get("/flowers", async (req, res) => {
             }
         }));
 
+        //if there are no query parameters- send back BALD url as self
+        const selfLink = (req.query.limit || req.query.page)
+        ? `${baseUrl}?page=${page}&limit=${limit}` : baseUrl
+
         const getPaginationLink = (p) => `${baseUrl}?page=${p}&limit=${limit}`;
 
         res.json({
             "items": mappedItems,
             "_links": {
-                "self": { "href": getPaginationLink(page) }
+                "self": { "href": selfLink }
             },
             "pagination": {
                 "currentPage": page,
