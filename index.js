@@ -14,7 +14,8 @@ app.use(urlencoded({extended:true}))
 app.use(function (req,res,next){
     const allowedOrigins = [
         'http://localhost:8080',
-        'http://145.24.237.144:8080'
+        'http://145.24.237.144:8080',
+        'http://145.24.237.144:3000'
     ]
 
     const origin = req.headers.origin
@@ -22,6 +23,11 @@ app.use(function (req,res,next){
         res.header("Access-Control-Allow-Origin", origin)
         res.header("Vary", "Origin")
         res.header("Access-Control-Allow-Credentials", "true")
+    } else if(origin) {
+        res.header("Access-Control-Allow-Origin", origin)
+        res.header("Vary", "Origin")
+    } else {
+        res.header("Access-Control-Allow-Origin", "*")
     }
 
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
