@@ -10,37 +10,35 @@ routes.get("/flowers", async (req, res) => {
     try {
 
         const totalItems = await Flower.countDocuments();
-
-
-        if (totalItems === 0) {
-            const initialFlowers = await seedDB(10);
-            await Flower.insertMany(initialFlowers);
-        }
-
-
-        const limit = parseInt(req.query.limit) || totalItems; // Default naar alles als limit ontbreekt
+        const limit = parseInt(req.query.limit) || totalItems;
         const page = parseInt(req.query.page) || 1;
+
+
+        const totalPages = Math.ceil(totalItems / limit) || 1;
         const skip = (page - 1) * limit;
 
 
         const flowers = await Flower.find().skip(skip).limit(limit);
 
-        const protocol = req.protocol;
-        const host = req.headers.host;
-        const baseUrl = `${protocol}://${host}/flowers`;
 
+        const baseUrl = `http://${req.headers.host}/flowers`;
+        const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
 
         const mappedItems = flowers.map(flower => ({
-            ...flower.toObject(),
+            id: flower._id,
+            name: flower.name,
+            color: flower.color,
+            origin: flower.origin,
+
             _links: {
-                self: { href: `${baseUrl}/${flower._id}` },
-                collection: { href: baseUrl }
+                self: {
+                    href: `${baseUrl}/${flower._id}`
+                },
+                collection: {
+                    href: baseUrl
+                }
             }
         }));
-
-
-        const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
-        const totalPages = Math.ceil(totalItems / limit) || 1;
 
 
         const responseData = {
@@ -54,19 +52,33 @@ routes.get("/flowers", async (req, res) => {
                 totalPages: totalPages,
                 totalItems: totalItems,
                 _links: {
-                    first: { page: 1, href: getPaginationLink(1) },
-                    last: { page: totalPages, href: getPaginationLink(totalPages) },
-                    previous: { page: Math.max(1, page - 1), href: getPaginationLink(Math.max(1, page - 1)) },
-                    next: { page: Math.min(totalPages, page + 1), href: getPaginationLink(Math.min(totalPages, page + 1)) }
+                    first: {
+                        page: 1,
+                        href: getPaginationLink(1)
+                    },
+                    last: {
+                        page: totalPages,
+                        href: getPaginationLink(totalPages)
+                    },
+                    previous: {
+                        page: Math.max(1, page - 1),
+                        href: getPaginationLink(Math.max(1, page - 1))
+                    },
+                    next: {
+                        page: Math.min(totalPages, page + 1),
+                        href: getPaginationLink(Math.min(totalPages, page + 1))
+                    }
                 }
             }
         };
 
-        res.setHeader("Content-Type", 'application/json');
-        res.status(200).json(responseData);
+        res.json(responseData);
 
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    } catch (err) {
+        res.status(500).json({
+            error: "Server fout bij het ophalen van de collectie",
+            message: err.message
+        });
     }
 })
 
