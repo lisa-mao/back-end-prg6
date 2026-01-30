@@ -68,12 +68,8 @@ app.use((req, res, next)=> {
     console.log("Requested /")
     console.log(`Request METHOD: ${req.method}`)
 
-    if (!req.accepts('json'|| 'x-www-form-urlencoded')) {
-        return res.status(406).json('Not acceptable: only json-content/x-www-form-urlencoded allowed!')
-    }
-    if (req.headers?.accept) {
-        console.log(`The accept header is: ${req.headers.accept}`)
-
+    if (req.headers.accept && !req.accepts('json') && !req.accepts('*/*')) {
+        return res.status(406).json('Not acceptable: only json-content allowed!')
     } else {
         console.log("There is no accept header")
     }
