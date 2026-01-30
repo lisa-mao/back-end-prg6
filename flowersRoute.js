@@ -78,7 +78,7 @@ routes.get("/flowers/:id", async (req, res) => {
     }
 })
 
-routes.put("/flowers/seed/:id", async (req, res) => {
+routes.put("/flowers/:id", async (req, res) => {
     try {
         //called object destructuring
         //when a user sends a form or a json-object gets send through a post req it goes into the req.body
@@ -117,7 +117,7 @@ routes.put("/flowers/seed/:id", async (req, res) => {
 
 })
 
-routes.delete("/flowers/delete/:id", async (req, res) => {
+routes.delete("/flowers/:id", async (req, res) => {
     try {
         //called object destructuring
         //when a user sends a form or a json-object gets send through a post req it goes into the req.body
@@ -128,7 +128,7 @@ routes.delete("/flowers/delete/:id", async (req, res) => {
         //getting id from url
         const flowerId = req.params.id
 
-        //update flower
+        //delete flower
         const deleteFlower = await Flower.findByIdAndDelete(
             flowerId, {
                 flowerName, description, author, amount
