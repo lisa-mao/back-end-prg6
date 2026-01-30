@@ -9,26 +9,26 @@ const routes = express.Router()
 routes.get("/flowers", async (req, res) => {
     try {
         const totalItems = await Flower.countDocuments();
-        const limit = parseInt(req.query.limit);
+        const limit = req.query.limit ? parseInt(req.query.limit) : null;
         const page = parseInt(req.query.page) || 1;
 
-        const baseUrl = `https://${req.headers.host}/flowers`;
+        const baseUrl = `http://${req.headers.host}/flowers`;
 
-        // If no limit is specified return all items without pagination
+        // If no limit is specified, return all items without pagination
         if (!limit || isNaN(limit)) {
             const flowers = await Flower.find();
 
             const mappedItems = flowers.map(flower => ({
-                id: flower._id,
-                name: flower.name,
-                color: flower.color,
-                origin: flower.origin,
-                _links: {
-                    self: {
-                        href: `${baseUrl}/${flower._id}`
+                "id": flower._id,
+                "name": flower.name || "",
+                "color": flower.color || "",
+                "origin": flower.origin || "",
+                "_links": {
+                    "self": {
+                        "href": `${baseUrl}/${flower._id}`
                     },
-                    collection: {
-                        href: baseUrl
+                    "collection": {
+                        "href": baseUrl
                     }
                 }
             }));
@@ -44,46 +44,46 @@ routes.get("/flowers", async (req, res) => {
         const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
 
         const mappedItems = flowers.map(flower => ({
-            id: flower._id,
-            name: flower.name,
-            color: flower.color,
-            origin: flower.origin,
-            _links: {
-                self: {
-                    href: `${baseUrl}/${flower._id}`
+            "id": flower._id,
+            "name": flower.name || "",
+            "color": flower.color || "",
+            "origin": flower.origin || "",
+            "_links": {
+                "self": {
+                    "href": `${baseUrl}/${flower._id}`
                 },
-                collection: {
-                    href: baseUrl
+                "collection": {
+                    "href": baseUrl
                 }
             }
         }));
 
         const responseData = {
-            items: mappedItems,
-            _links: {
-                self: { href: `${baseUrl}?limit=${limit}&page=${page}` }
+            "items": mappedItems,
+            "_links": {
+                "self": { "href": `${baseUrl}?limit=${limit}&page=${page}` }
             },
-            pagination: {
-                currentPage: page,
-                currentItems: mappedItems.length,
-                totalPages: totalPages,
-                totalItems: totalItems,
-                _links: {
-                    first: {
-                        page: 1,
-                        href: getPaginationLink(1)
+            "pagination": {
+                "currentPage": page,
+                "currentItems": mappedItems.length,
+                "totalPages": totalPages,
+                "totalItems": totalItems,
+                "_links": {
+                    "first": {
+                        "page": 1,
+                        "href": getPaginationLink(1)
                     },
-                    last: {
-                        page: totalPages,
-                        href: getPaginationLink(totalPages)
+                    "last": {
+                        "page": totalPages,
+                        "href": getPaginationLink(totalPages)
                     },
-                    previous: {
-                        page: Math.max(1, page - 1),
-                        href: getPaginationLink(Math.max(1, page - 1))
+                    "previous": {
+                        "page": Math.max(1, page - 1),
+                        "href": getPaginationLink(Math.max(1, page - 1))
                     },
-                    next: {
-                        page: Math.min(totalPages, page + 1),
-                        href: getPaginationLink(Math.min(totalPages, page + 1))
+                    "next": {
+                        "page": Math.min(totalPages, page + 1),
+                        "href": getPaginationLink(Math.min(totalPages, page + 1))
                     }
                 }
             }
@@ -93,8 +93,8 @@ routes.get("/flowers", async (req, res) => {
 
     } catch (err) {
         res.status(500).json({
-            error: "Server fout bij het ophalen van de collectie",
-            message: err.message
+            "error": "Server fout bij het ophalen van de collectie",
+            "message": err.message
         });
     }
 })
