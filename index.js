@@ -50,7 +50,7 @@ app.use(function (req,res,next){
     }
 
     if (allowedMethods && !allowedMethods.includes(req.method)) {
-        return res.status(405).json({
+        return res.status(204).json({
             error: `method: ${req.method} is not allowed on this path`,
             allowed: allowedMethods
         })
