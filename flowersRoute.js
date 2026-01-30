@@ -18,43 +18,41 @@ routes.get("/flowers", async (req, res) => {
             "items": flowers.map(flower => ({
                 ...flower.toObject(),
                 "_links": {
-                    self: {
-                        href: `${protocol}://${host}/flowers/${flower._id}`
+                    "self": {
+                        "href": `${protocol}://${host}/flowers/${flower._id}`
                     },
-                    collection: {
-                        href: `${protocol}://${host}/flowers`
+                    "collection": {
+                        "href": `${protocol}://${host}/flowers`
                     }
                 }
             })),
 
             "_links": {
-                self: {
-                    href: `${protocol}://${host}/flowers`
+                "self": {
+                    "href": `${protocol}://${host}/flowers`
                 }
             },
             "pagination": {
                 "currentPage": 1,
                 "currentItems": flowers.length,
                 "totalPages": 2,
-                "totalItems": 10,
+                "totalItems": flowers.length,
                 "_links": {
                     "first": {
                         "page": 1,
-                        "href:": `${protocol}://${host}/flowers/?page=1&limit=5}`
+                        "href": `${protocol}://${host}/flowers/?page=1&limit=5`
                     },
                     "last": {
                         "page": 2,
-                        "href:": `${protocol}://${host}/flowers/?page=2&limit=5}`
+                        "href": `${protocol}://${host}/flowers/?page=2&limit=5`
                     },
                     "previous": null,
                     "next": {
                         "page": 2,
-                        "href:": `${protocol}://${host}/flowers/?page=2&limit=5}`
+                        "href": `${protocol}://${host}/flowers/?page=2&limit=5`
                     }
                 }
-            },
-            count: flowers.length
-
+            }
         }
 
         //status code: everything went well and the server send a response back
