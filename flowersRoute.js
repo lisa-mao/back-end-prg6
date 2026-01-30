@@ -38,8 +38,8 @@ routes.post("/flowers/seed", async (req, res) => {
         let count = parseInt(amount, 10)
 
         if (isNaN(count) || count <= 0) {
-            count = 1
-            console.log("did a default 10 seeding, amount not working so default to 1")
+            count = 10
+            console.log("amount not working so default to 10")
         }
 
         const flowersToInsert = await seedDB(count, {flowerName, description, author})
