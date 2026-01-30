@@ -14,7 +14,7 @@ app.use(urlencoded({extended:true}))
 //CORS
 const allowedOrigins = [
     'http://localhost:8080',
-    'http://145.24.237.144/back-end-prg6'
+    'http://145.24.237.144:8080'
 ]
 
 app.use(function (req,res,next){
