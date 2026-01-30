@@ -6,8 +6,15 @@ const routes = express.Router()
 
 //callback function need async to use await and get all flowers
 routes.get("/flowers", async (req, res) => {
-
     try {
+        const count = await Flower.countDocuments()
+
+        if (count === 0) {
+            console.log("collection is empty seeding data")
+
+            const initialFlowers = await seedDB(10)
+            await Flower.insertMany(initialFlowers)
+        }
         //wait for database communication before continuing
         const flowers = await Flower.find({})
 
