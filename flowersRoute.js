@@ -6,6 +6,7 @@ const routes = express.Router()
 
 //callback function need async to use await and get all flowers
 routes.get("/flowers", async (req, res) => {
+
     try {
         //wait for database communication before continuing
         const flowers = await Flower.find({})
@@ -27,16 +28,18 @@ routes.post("/flowers/seed", async (req, res) => {
         //validation
         if (!flowerName || !description || !author) {
             return res.status(400).json({
-                message: "flower name, description and author is required "
+                message: "required fields are missing!",
+                received: {flowerName, description,author, amount}
             })
         }
 
         //seeing if the amount works
-        let count = parseInt(amount)
+        //radix specifies which number system to use
+        let count = parseInt(amount, 10)
 
         if (isNaN(count) || count <= 0) {
-            count = 10
-            console.log("did a default 10 seeding, amount not working")
+            count = 1
+            console.log("did a default 10 seeding, amount not working so default to 1")
         }
 
         const flowersToInsert = await seedDB(count, {flowerName, description, author})

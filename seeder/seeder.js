@@ -20,7 +20,14 @@ async function seedDB(amount, customData = {}) {
         //add to database
         const flowers = []
         for (let i = 0 ; i < amount; i++) {
-            flowers.push(createRandomFlower(customData))
+
+            flowers.push(
+                {
+                    flowerName: customData.flowerName,
+                    description: customData.description,
+                    author: customData.author,
+                    createdAt: new Date()
+                })
         }
 
         return flowers
