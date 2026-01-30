@@ -55,6 +55,8 @@ routes.get("/flowers", async (req, res) => {
             }
         }
 
+        res.setHeader("Content-Type", 'application/json')
+
         //status code: everything went well and the server send a response back
         res.status(200).json(response)
 
