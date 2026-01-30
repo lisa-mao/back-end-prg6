@@ -2,6 +2,8 @@ import mongoose from 'mongoose'
 import express, {urlencoded} from 'express'
 import flowersRoute from "./flowersRoute.js";
 import connectDB from "./config/db.js";
+import Flower from "./models/Flower.js";
+import seedDB from "./seeder/seeder.js";
 
 const app = express()
 const PORT = 8080
@@ -20,13 +22,21 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
     const parts = req.path.split("/").filter(Boolean);
-    const isDetail = parts.length >= 2 && parts[0] === "flowers";
-    const allowed = isDetail ? "GET, PUT, DELETE, OPTIONS" : "GET, POST, OPTIONS";
-    res.header("Allow", allowed);
+    const isCollection = parts.length === 1 && parts[0] === "flowers" || (parts.length === 2 && parts[1] === "seed")
+    const isDetail = parts.length >= 2 && parts[0] === "flowers" && parts[1] !== "seed";
+
+    let allowed = "GET, OPTIONS"
+    if (isCollection) {
+        allowed = "GET, POST, OPTIONS"
+    } else if (isDetail) {
+        allowed = "GET, PUT, DELETE, OPTIONS"
+    }
 
     if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
+        return res.sendStatus(204)
     }
+
+    res.header("Allow", allowed)
     next();
 })
 
@@ -41,11 +51,18 @@ app.use((req, res, next) => {
     next()
 })
 
-connectDB().then(r =>
+connectDB().then(async () => {
+
+    const count = await Flower.countDocuments()
+    if (count === 0) {
+        console.log("db empty, 10 flowers seed commenced!")
+        const initialFlowers = await seedDB(10)
+        await Flower.insertMany(initialFlowers)
+    }
     app.listen(PORT, () => {
         console.log(`Server luistert op poort: ${PORT}`);
     })
-);
+});
 
 
 //routes

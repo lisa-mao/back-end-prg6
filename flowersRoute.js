@@ -67,37 +67,24 @@ routes.post("/flowers/seed", async (req, res) => {
     try {
         const {flowerName, description, author, amount} = req.body
 
-
-        if (!flowerName) {
-            return res.status(400).json({
-                message: "flowerName is required and cannot be empty"
-            })
+        if (!flowerName || !description || !author) {
+            return res.status(400).json({ error: "field no found" });
         }
 
-        if (!description) {
-            return res.status(400).json({
-                message: "description is required and cannot be empty"
-            })
-        }
+        const flower = new Flower({ flowerName, description, author });
+        await flower.save();
 
-        if (!author) {
-            return res.status(400).json({
-                message: "author is required and cannot be empty"
-            })
-        }
+        const baseUrl = `${req.protocol}://${req.headers.host}/flowers`;
 
-        let count = parseInt(amount, 10)
-        if (isNaN(count) || count <= 0) {
-            count = 10
-            console.log("amount not working so default to 10")
-        }
-
-        const flowersToInsert = await seedDB(count, {flowerName, description, author})
-        const createdFlowers = await Flower.insertMany(flowersToInsert)
-
-        res.status(201).json({message: "Created flower!", createdFlowers})
+        res.status(201).json({
+            ...flower.toJSON(),
+            _links: {
+                self: { href: `${baseUrl}/${flower._id}` },
+                collection: { href: baseUrl }
+            }
+        });
     } catch (error) {
-        res.status(500).json({message: "Error creating flower", error: error.message})
+        res.status(500).json({ error: error.message });
     }
 })
 
