@@ -11,10 +11,57 @@ routes.get("/flowers", async (req, res) => {
         //wait for database communication before continuing
         const flowers = await Flower.find({})
 
-        //status code: everything went well and the server send a response back
-        res.status(200).json({message: "Got all flowers",flowers})
+        const protocol = req.protocol
+        const host = req.headers.host
 
-    } catch (error) {
+        const response = {
+            "items": flowers.map(flower => ({
+                ...flower.toObject(),
+                "_links": {
+                    self: {
+                        href: `${protocol}://${host}/flowers/${flower._id}`
+                    },
+                    collection: {
+                        href: `${protocol}://${host}/flowers`
+                    }
+                }
+            })),
+
+            "_links": {
+                self: {
+                    href: `${protocol}://${host}/flowers`
+                }
+            },
+            "pagination": {
+                "currentPage": 1,
+                "currentItems": flowers.length,
+                "totalPages": 2,
+                "totalItems": 10,
+                "_links": {
+                    "first": {
+                        "page": 1,
+                        "href:": `${protocol}://${host}/flowers/?page=1&limit=5}`
+                    },
+                    "last": {
+                        "page": 2,
+                        "href:": `${protocol}://${host}/flowers/?page=2&limit=5}`
+                    },
+                    "previous": null,
+                    "next": {
+                        "page": 2,
+                        "href:": `${protocol}://${host}/flowers/?page=2&limit=5}`
+                    }
+                }
+            },
+            count: flowers.length
+
+        }
+
+        //status code: everything went well and the server send a response back
+        res.status(200).json(response)
+
+    } catch
+        (error) {
         res.status(500).json(error.message)
     }
 })
@@ -29,7 +76,7 @@ routes.post("/flowers/seed", async (req, res) => {
         if (!flowerName || !description || !author) {
             return res.status(400).json({
                 message: "required fields are missing!",
-                received: {flowerName, description,author, amount}
+                received: {flowerName, description, author, amount}
             })
         }
 
