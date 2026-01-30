@@ -1,7 +1,7 @@
 import express, {response} from "express";
 import Flower from "./models/Flower.js";
 import seedDB from "./seeder/seeder.js"
-import {base} from "@faker-js/faker";
+
 
 const routes = express.Router()
 
@@ -20,9 +20,8 @@ routes.get("/flowers", async (req, res) => {
 
             const mappedItems = flowers.map(flower => ({
                 "id": flower._id,
-                "name": flower.name || "",
-                "color": flower.color || "",
-                "origin": flower.origin || "",
+                "flowerName": flower.flowerName || "",
+                "description": flower.description || "",
                 "_links": {
                     "self": {
                         "href": `${baseUrl}/${flower._id}`
@@ -45,9 +44,8 @@ routes.get("/flowers", async (req, res) => {
 
         const mappedItems = flowers.map(flower => ({
             "id": flower._id,
-            "name": flower.name || "",
-            "color": flower.color || "",
-            "origin": flower.origin || "",
+            "flowerName": flower.flowerName || "",
+            "description": flower.description || "",
             "_links": {
                 "self": {
                     "href": `${baseUrl}/${flower._id}`
@@ -100,39 +98,42 @@ routes.get("/flowers", async (req, res) => {
 })
 
 //seed database
-
 routes.post("/flowers/seed", async (req, res) => {
     try {
         const {flowerName, description, author, amount} = req.body
 
-        //validation
-        if (!flowerName || !description || !author) {
+        // Validatie - zonder trim
+        if (!flowerName) {
             return res.status(400).json({
-                message: "required fields are missing!",
-                received: {flowerName, description, author, amount}
+                message: "flowerName is required and cannot be empty"
             })
         }
 
-        //seeing if the amount works
-        //radix specifies which number system to use
-        let count = parseInt(amount, 10)
+        if (!description) {
+            return res.status(400).json({
+                message: "description is required and cannot be empty"
+            })
+        }
 
+        if (!author) {
+            return res.status(400).json({
+                message: "author is required and cannot be empty"
+            })
+        }
+
+        let count = parseInt(amount, 10)
         if (isNaN(count) || count <= 0) {
             count = 10
             console.log("amount not working so default to 10")
         }
 
         const flowersToInsert = await seedDB(count, {flowerName, description, author})
-
         const createdFlowers = await Flower.insertMany(flowersToInsert)
 
-
         res.status(201).json({message: "Created flower!", createdFlowers})
-    } catch (error
-        ) {
+    } catch (error) {
         res.status(500).json({message: "Error creating flower", error: error.message})
     }
-
 })
 
 //get one specific flower
@@ -148,34 +149,52 @@ routes.get("/flowers/:id", async (req, res) => {
         }
 
         res.status(200).json({
-            message: `Details van de bloem ${specificFlower.flowerName} went through!`,
-            data: specificFlower
+            "id": specificFlower._id,
+            "flowerName": specificFlower.flowerName,
+            "description": specificFlower.description,
+            "author": specificFlower.author,
+            "_links": {
+                "self": {
+                    "href": `http://${req.headers.host}/flowers/${specificFlower._id}`
+                },
+                "collection": {
+                    "href": `http://${req.headers.host}/flowers`
+                }
+            }
         })
 
-
     } catch (error) {
-        res.status(500).json(error.message)
+        res.status(500).json({message: error.message})
     }
 })
 
 routes.put("/flowers/:id", async (req, res) => {
     try {
-        //called object destructuring
-        //when a user sends a form or a json-object gets send through a post req it goes into the req.body
-        //you tell js to look inside req.body and look for alike properties and get the value of them.
-        //its like a user sends u a package and you unpack it in req.body
-        const {flowerName, description, author, amount} = req.body
-
-        //getting id from url
+        const {flowerName, description, author} = req.body
         const flowerId = req.params.id
 
-        //update flower
+        // Validatie - zonder trim
+        if (!flowerName) {
+            return res.status(400).json({
+                message: "flowerName is required and cannot be empty"
+            })
+        }
+
+        if (!description) {
+            return res.status(400).json({
+                message: "description is required and cannot be empty"
+            })
+        }
+
+        if (!author) {
+            return res.status(400).json({
+                message: "author is required and cannot be empty"
+            })
+        }
+
         const updatedFlower = await Flower.findByIdAndUpdate(
-            flowerId, {
-                flowerName, description, author, amount
-            },
-            //new makes it so mongoose returns the modified data instead of the original one
-            //runvalidators makes sure that the updated data follows the schema validation
+            flowerId,
+            {flowerName, description, author},
             {new: true, runValidators: true}
         )
 
@@ -190,50 +209,30 @@ routes.put("/flowers/:id", async (req, res) => {
             data: updatedFlower
         })
 
-    } catch (error
-        ) {
-        res.status(500).json({message: "Error creating flower", error: error.message})
+    } catch (error) {
+        res.status(500).json({message: "Error updating flower", error: error.message})
     }
-
 })
 
 routes.delete("/flowers/:id", async (req, res) => {
     try {
-        //called object destructuring
-        //when a user sends a form or a json-object gets send through a post req it goes into the req.body
-        //you tell js to look inside req.body and look for alike properties and get the value of them.
-        //its like a user sends u a package and you unpack it in req.body
-        const {flowerName, description, author, amount} = req.body
-
-        //getting id from url
         const flowerId = req.params.id
 
-        //delete flower
-        const deleteFlower = await Flower.findByIdAndDelete(
-            flowerId, {
-                flowerName, description, author, amount
-            },
-            //return new one and not the original data
-            {new: true}
-        )
+        const deletedFlower = await Flower.findByIdAndDelete(flowerId)
 
-        if (!deleteFlower) {
+        if (!deletedFlower) {
             return res.status(404).json({
                 message: "flower not found"
             })
         }
 
-        res.status(202).json({
-            message: `${deleteFlower.flowerName} deleted!`,
-            data: deleteFlower
+        res.status(200).json({
+            message: `${deletedFlower.flowerName} deleted!`
         })
 
-    } catch (error
-        ) {
+    } catch (error) {
         res.status(500).json({message: "Error deleting flower", error: error.message})
     }
-
 })
-
 
 export default routes

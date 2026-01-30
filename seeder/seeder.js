@@ -5,7 +5,7 @@ function createRandomFlower() {
     return {
         //need key/value pair for helpers to work
         //chooses a random flower
-        flowerName: faker.helpers.arrayElement(['Rose', 'Cornflower', 'Buttercup', 'Lily', 'Tulip', 'Daisy', 'Grass', 'small flower', 'flowername2', "flowername3"]),
+        flowerName: faker.helpers.arrayElement(['Rose', 'Cornflower', 'Buttercup', 'Lily', 'Tulip', 'Daisy', 'Grass', 'Daffodil', 'Lavender', 'Peony']),
         description: faker.lorem.sentence(5.10),
         author: faker.person.firstName(),
         createdAt: new Date()
