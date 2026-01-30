@@ -26,13 +26,39 @@ app.use(function (req,res,next){
         res.header("Access-Control-Allow-Credentials", "true")
     }
 
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
+    const pathParts = req.path.split("/").filter(part => part !== "")
+    const isCollection = pathParts.length <= 1
+    const isItem = pathParts.length > 1
+
+    let allowedMethods = ""
+
+    if (isCollection){
+        allowedMethods = "GET, POST, OPTIONS"
+    } else if (isItem) {
+        allowedMethods = "GET, PUT, DELETE, OPTIONS"
+    }
+    res.header("Allow", allowedMethods)
 
     if (req.method === "OPTIONS") {
         res.header("Access-Control-Max-Age", "86400")
         return res.sendStatus(204)
     }
+
+    if (allowedMethods && !allowedMethods.includes(req.method)) {
+        return res.status(204).json({
+            error: `method: ${req.method} is not allowed on this path`,
+            allowed: allowedMethods
+        })
+    }
+
+
+
+
+
+
 
     next()
 })
