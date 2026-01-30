@@ -12,51 +12,22 @@ app.use(express.urlencoded({extended: true}))
 
 //CORS
 app.use(function (req, res, next) {
-    const allowedOrigins = [
-        'http://localhost:8080',
-        'http://145.24.237.144:8080',
-        'http://145.24.237.144:3000'
-    ]
-
+    const allowedOrigins = ['http://localhost:8080', 'http://145.24.237.144:8080', 'http://145.24.237.144:3000'];
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.header("Access-Control-Allow-Origin", origin);
-        res.header("Vary", "Origin");
-        res.header("Access-Control-Allow-Credentials", "true");
-    } else {
-        res.header("Access-Control-Allow-Origin", "*");
-    }
+    res.header("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : "*");
 
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
-    const cleanPath = req.path.replace(/\/$/, "");
-    const pathParts = cleanPath.split("/").filter(part => part !== "");
-
-    let allowedMethods = "OPTIONS";
-
-    if (pathParts.length === 1 && pathParts[0] === "flowers") {
-        allowedMethods = "GET, POST, OPTIONS";
-    } else if (pathParts.length === 2 && pathParts[0] === "flowers") {
-        allowedMethods = "GET, PUT, DELETE, OPTIONS";
-    } else {
-        allowedMethods = "GET, OPTIONS";
-    }
-
-    res.header("Allow", allowedMethods);
+    const parts = req.path.split("/").filter(Boolean);
+    const isDetail = parts.length >= 2 && parts[0] === "flowers";
+    const allowed = isDetail ? "GET, PUT, DELETE, OPTIONS" : "GET, POST, OPTIONS";
+    res.header("Allow", allowed);
 
     if (req.method === "OPTIONS") {
-        res.header("Access-Control-Max-Age", "86400");
         return res.sendStatus(204);
     }
-
-    if (!allowedMethods.includes(req.method)) {
-        return res.status(405).json({
-            error: `Method ${req.method} is not allowed on ${req.path}`,
-            allowed: allowedMethods
-        });
-    }
-    next()
+    next();
 })
 
 //middleware that checks if the request method is through json or not
