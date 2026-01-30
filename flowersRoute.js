@@ -9,54 +9,64 @@ const routes = express.Router()
 routes.get("/flowers", async (req, res) => {
     try {
 
-        let limit = parseInt(req.query.limit)
-        let page = parseInt(req.query.page) || 1
+        const totalItems = await Flower.countDocuments();
 
-        const totalItems = await Flower.countDocuments()
 
-        let flowers
-        let totalPages = 1
-
-        if (limit && limit > 0) {
-            totalPages = Math.ceil(totalItems / limit)
-            const skip = (page - 1) * limit
-
-            //wait for database communication before continuing
-            flowers = await Flower.find().skip(skip).limit(limit)
-        } else {
-            flowers = await Flower.find()
+        if (totalItems === 0) {
+            const initialFlowers = await seedDB(10);
+            await Flower.insertMany(initialFlowers);
         }
 
-        const protocol = req.protocol
-        const host = req.headers.host
-        const baseUrl = `${protocol}://${host}/flowers`
 
-        const getPaginationLink = (p) => `${baseUrl}?limit=${limit || totalItems}&page=${p}`
+        const limit = parseInt(req.query.limit) || totalItems; // Default naar alles als limit ontbreekt
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
 
-        res.json({
-                "items": flowers,
-                "_links": {
-                    "self": {
-                        "href": baseUrl
-                    },
-                    "pagination": {
-                        "currentPage": page,
-                        "currentItems": flowers.length,
-                        "totalPages": totalPages,
-                        "totalItems": totalItems,
-                        "_links": {
-                            "first": {href: getPaginationLink(1)},
-                            "last": {href: getPaginationLink(totalPages)},
-                            "previous": {href: getPaginationLink(page > 1 ? page - 1 : 1)},
-                            "next": {href: getPaginationLink(page < totalPages ? page + 1 : totalPages)}
-                        }
-                    }
+
+        const flowers = await Flower.find().skip(skip).limit(limit);
+
+        const protocol = req.protocol;
+        const host = req.headers.host;
+        const baseUrl = `${protocol}://${host}/flowers`;
+
+
+        const mappedItems = flowers.map(flower => ({
+            ...flower.toObject(),
+            _links: {
+                self: { href: `${baseUrl}/${flower._id}` },
+                collection: { href: baseUrl }
+            }
+        }));
+
+
+        const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
+        const totalPages = Math.ceil(totalItems / limit) || 1;
+
+
+        const responseData = {
+            items: mappedItems,
+            _links: {
+                self: { href: baseUrl }
+            },
+            pagination: {
+                currentPage: page,
+                currentItems: mappedItems.length,
+                totalPages: totalPages,
+                totalItems: totalItems,
+                _links: {
+                    first: { page: 1, href: getPaginationLink(1) },
+                    last: { page: totalPages, href: getPaginationLink(totalPages) },
+                    previous: { page: Math.max(1, page - 1), href: getPaginationLink(Math.max(1, page - 1)) },
+                    next: { page: Math.min(totalPages, page + 1), href: getPaginationLink(Math.min(totalPages, page + 1)) }
                 }
             }
-        )
-    } catch
-        (error) {
-        res.status(500).json(error.message)
+        };
+
+        res.setHeader("Content-Type", 'application/json');
+        res.status(200).json(responseData);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 })
 
