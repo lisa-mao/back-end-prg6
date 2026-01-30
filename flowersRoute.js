@@ -35,8 +35,10 @@ routes.get("/flowers", async (req, res) => {
 
             return res.json({
                 "items": mappedItems,
-                "_links":{
-                    "self": {"href": baseUrl}
+                "_links": {
+                    "self": {
+                        "href": baseUrl
+                    }
                 }
             });
         }
@@ -46,7 +48,7 @@ routes.get("/flowers", async (req, res) => {
         const skip = (page - 1) * limit;
         const flowers = await Flower.find().skip(skip).limit(limit);
 
-        const getPaginationLink = (p) => `${baseUrl}?limit=${limit}&page=${p}`;
+        const getPaginationLink = (p) => `${baseUrl}?page=${p}&limit=${limit}`;
 
         const mappedItems = flowers.map(flower => ({
             "id": flower._id,
@@ -62,10 +64,15 @@ routes.get("/flowers", async (req, res) => {
             }
         }));
 
+        const previousPage = page > 1 ? page - 1 : null;
+        const nextPage = page < totalPages ? page + 1 : null;
+
         const responseData = {
             "items": mappedItems,
             "_links": {
-                "self": { "href": `${baseUrl}?limit=${limit}&page=${page}` }
+                "self": {
+                    "href": getPaginationLink(page)
+                }
             },
             "pagination": {
                 "currentPage": page,
@@ -81,14 +88,14 @@ routes.get("/flowers", async (req, res) => {
                         "page": totalPages,
                         "href": getPaginationLink(totalPages)
                     },
-                    "previous": {
-                        "page": Math.max(1, page - 1),
-                        "href": getPaginationLink(Math.max(1, page - 1))
-                    },
-                    "next": {
-                        "page": Math.min(totalPages, page + 1),
-                        "href": getPaginationLink(Math.min(totalPages, page + 1))
-                    }
+                    "previous": previousPage !== null ? {
+                        "page": previousPage,
+                        "href": getPaginationLink(previousPage)
+                    } : null,
+                    "next": nextPage !== null ? {
+                        "page": nextPage,
+                        "href": getPaginationLink(nextPage)
+                    } : null
                 }
             }
         };
